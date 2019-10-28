@@ -39,6 +39,7 @@ class MyApp extends StatelessWidget {
             appBar: AppBar(
               title: const Text('Widget WebView'),
             ),
+            validUrlHeaderRegex: "\\Q${selectedUrl}\\E",
             withZoom: true,
             withLocalStorage: true,
             hidden: true,
@@ -102,6 +103,8 @@ class _MyHomePageState extends State<MyHomePage> {
   StreamSubscription<WebViewStateChanged> _onStateChanged;
 
   StreamSubscription<WebViewHttpError> _onHttpError;
+
+  StreamSubscription<WebViewHeaders> _afterHttpRequests;
 
   StreamSubscription<double> _onProgressChanged;
 
@@ -183,12 +186,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
     _onHttpError =
         flutterWebViewPlugin.onHttpError.listen((WebViewHttpError error) {
-      if (mounted) {
-        setState(() {
-          _history.add('onHttpError: ${error.code} ${error.url}');
+          if (mounted) {
+            setState(() {
+              _history.add('onHttpError: ${error.code} ${error.url}');
+            });
+          }
         });
-      }
-    });
+
+    _afterHttpRequests =
+        flutterWebViewPlugin.afterHttpRequests.listen((WebViewHeaders headers) {
+          _history.add('afterHttpRequests: ${headers.baseUrl}');
+        });
   }
 
   @override
@@ -201,6 +209,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _onProgressChanged.cancel();
     _onScrollXChanged.cancel();
     _onScrollYChanged.cancel();
+    _afterHttpRequests.cancel();
 
     flutterWebViewPlugin.dispose();
 

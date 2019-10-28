@@ -8,6 +8,7 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
     BOOL _enableAppScheme;
     BOOL _enableZoom;
     NSString* _invalidUrlRegex;
+    NSString* _validUrlHeaderRegex;
     NSMutableSet* _javaScriptChannelNames;
 }
 @end
@@ -88,6 +89,7 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
     NSNumber *scrollBar = call.arguments[@"scrollBar"];
     NSNumber *withJavascript = call.arguments[@"withJavascript"];
     _invalidUrlRegex = call.arguments[@"invalidUrlRegex"];
+    _validUrlHeaderRegex = call.arguments[@"validUrlHeaderRegex"];
     
     _javaScriptChannelNames = [[NSMutableSet alloc] init];
     

@@ -55,7 +55,9 @@ android {
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.0.2'
 
-	testImplementation 'junit:junit:4.12'
+    implementation 'com.squareup.okhttp3:okhttp:3.0.1'
+
+    testImplementation 'junit:junit:4.12'
     testImplementation 'androidx.test:core:1.2.0'
 
 //    When running unit tests for project, gradle needs to have flutter.jar in path

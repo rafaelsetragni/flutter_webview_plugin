@@ -42,6 +42,7 @@ class FlutterWebviewPlugin {
   final _onProgressChanged = new StreamController<double>.broadcast();
   final _onHttpError = StreamController<WebViewHttpError>.broadcast();
   final _onPostMessage = StreamController<JavascriptMessage>.broadcast();
+  final _afterHttpRequests = StreamController<WebViewHeaders>.broadcast();
 
   final Map<String, JavascriptChannel> _javascriptChannels =
       // ignoring warning as min SDK version doesn't support collection literals yet
@@ -83,6 +84,11 @@ class FlutterWebviewPlugin {
         _handleJavascriptChannelMessage(
             call.arguments['channel'], call.arguments['message']);
         break;
+      case 'afterHttpRequests':
+        _afterHttpRequests.add(
+            new WebViewHeaders(call.arguments['url'], call.arguments['headers'])
+        );
+        break;
     }
   }
 
@@ -110,6 +116,8 @@ class FlutterWebviewPlugin {
   Stream<double> get onScrollXChanged => _onScrollXChanged.stream;
 
   Stream<WebViewHttpError> get onHttpError => _onHttpError.stream;
+
+  Stream<WebViewHeaders> get afterHttpRequests => _afterHttpRequests.stream;
 
   /// Start the Webview with [url]
   /// - [headers] specify additional HTTP headers
@@ -163,6 +171,7 @@ class FlutterWebviewPlugin {
     bool allowFileURLs,
     bool useWideViewPort,
     String invalidUrlRegex,
+    String validUrlHeaderRegex,
     bool geolocationEnabled,
     bool debuggingEnabled,
   }) async {
@@ -185,6 +194,7 @@ class FlutterWebviewPlugin {
       'allowFileURLs': allowFileURLs ?? false,
       'useWideViewPort': useWideViewPort ?? false,
       'invalidUrlRegex': invalidUrlRegex,
+      'validUrlHeaderRegex': validUrlHeaderRegex,
       'geolocationEnabled': geolocationEnabled ?? false,
       'withOverviewMode': withOverviewMode ?? false,
       'debuggingEnabled': debuggingEnabled ?? false,
@@ -275,6 +285,8 @@ class FlutterWebviewPlugin {
     _onScrollYChanged.close();
     _onHttpError.close();
     _onPostMessage.close();
+    _afterHttpRequests.close();
+
     _instance = null;
   }
 
@@ -360,4 +372,11 @@ class WebViewHttpError {
 
   final String url;
   final String code;
+}
+
+class WebViewHeaders {
+  WebViewHeaders(this.baseUrl, this.headers);
+
+  final String baseUrl;
+  final Map<String, Object> headers;
 }
