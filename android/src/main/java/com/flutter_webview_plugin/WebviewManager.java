@@ -443,6 +443,10 @@ class WebviewManager {
         webView.loadUrl(url);
     }
 
+    String getNativeUserAgent(){
+        return webView.getSettings().getUserAgentString();
+    }
+
     void reloadUrl(String url, Map<String, String> headers) {
         webView.loadUrl(url, headers);
     }

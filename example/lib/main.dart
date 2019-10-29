@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_webview_plugin/imports.dart';
 
-const kAndroidUserAgent =
+String kAndroidUserAgent =
     'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Mobile Safari/537.36';
 
 String selectedUrl = 'https://flutter.io';//'https://buildblocks.prodemge.gov.br';//
@@ -46,9 +46,15 @@ class MyApp extends StatelessWidget {
             invalidUrlRegex: r'^((?!\Q'+selectedUrl+r'\E)\S)*$',
             validUrlHeaderRegex: r'^\Q'+selectedUrl+r'\E(\/\S*)?$',
             initialChild: Container(
-              color: Color.fromARGB(255, 50, 00, 50),
+              color: Color.fromARGB(255, 96, 00, 96),
               child: const Center(
-                child: Text('Aguarde'),
+                child: Text(
+                    'Loading',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 252, 224, 17)
+                    ),
+                ),
               ),
             ),
             bottomNavigationBar: BottomAppBar(
@@ -184,7 +190,9 @@ class _MyHomePageState extends State<MyHomePage> {
           _history.add('onStateChanged: ${state.type} ${state.url}');
 
           if(state.type == WebViewState.abortLoad){
-            if(state.navigationType != null){
+            // WKNavigationType linkActivated
+            if(state.navigationType == 7){
+              debugPrint("Opening external browser: ${state.url}");
               launch(state.url);
             }
           }

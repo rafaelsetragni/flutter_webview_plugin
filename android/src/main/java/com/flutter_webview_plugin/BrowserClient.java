@@ -6,6 +6,7 @@ import android.os.Build;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
+import android.webkit.WebView.HitTestResult;
 import android.webkit.WebViewClient;
 import android.util.Log;
 
@@ -174,6 +175,15 @@ public class BrowserClient extends WebViewClient {
         return this.shouldOverrideUrlLoading(view, url);
     }
 
+    private int HitTest2WKNavigationType(HitTestResult original){
+
+        if (original.getType() > 0) {
+            return HitTestResult.SRC_ANCHOR_TYPE; // int 0
+        } else {
+            return -1;
+        }
+    }
+
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
         // returning true causes the current WebView to abort loading the URL,
@@ -187,7 +197,7 @@ public class BrowserClient extends WebViewClient {
         if(isInvalidUrlAction){
 
             Log.d(LOG_TAG, "Invalid url: "+url);
-            data.put("navigationType", view.getHitTestResult().getType() == 0 ? null : view.getHitTestResult().getType());
+            data.put("navigationType", HitTest2WKNavigationType(view.getHitTestResult()));
             data.put("type", "abortLoad");
 
         } else if(isBlockedUrl){
