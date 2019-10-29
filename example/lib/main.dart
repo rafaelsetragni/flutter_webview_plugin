@@ -1,13 +1,14 @@
 import 'dart:async';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:flutter/material.dart';
 
-import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
+import 'package:flutter_webview_plugin/imports.dart';
 
 const kAndroidUserAgent =
     'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Mobile Safari/537.36';
 
-String selectedUrl = 'https://flutter.io';
+String selectedUrl = 'https://flutter.io';//'https://buildblocks.prodemge.gov.br';//
 
 // ignore: prefer_collection_literals
 final Set<JavascriptChannel> jsChannels = [
@@ -39,14 +40,15 @@ class MyApp extends StatelessWidget {
             appBar: AppBar(
               title: const Text('Widget WebView'),
             ),
-            validUrlHeaderRegex: "\\Q${selectedUrl}\\E",
             withZoom: true,
             withLocalStorage: true,
             hidden: true,
+            invalidUrlRegex: r'^((?!\Q'+selectedUrl+r'\E)\S)*$',
+            validUrlHeaderRegex: r'^\Q'+selectedUrl+r'\E(\/\S*)?$',
             initialChild: Container(
-              color: Colors.redAccent,
+              color: Color.fromARGB(255, 50, 00, 50),
               child: const Center(
-                child: Text('Waiting.....'),
+                child: Text('Aguarde'),
               ),
             ),
             bottomNavigationBar: BottomAppBar(
@@ -180,6 +182,13 @@ class _MyHomePageState extends State<MyHomePage> {
       if (mounted) {
         setState(() {
           _history.add('onStateChanged: ${state.type} ${state.url}');
+
+          if(state.type == WebViewState.abortLoad){
+            if(state.navigationType != null){
+              launch(state.url);
+            }
+          }
+
         });
       }
     });
@@ -195,7 +204,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
     _afterHttpRequests =
         flutterWebViewPlugin.afterHttpRequests.listen((WebViewHeaders headers) {
-          _history.add('afterHttpRequests: ${headers.baseUrl}');
+          if (mounted) {
+            setState(() {
+              _history.add('afterHttpRequests: ${headers.baseUrl}');
+            });
+          }
         });
   }
 
@@ -238,8 +251,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   rect: Rect.fromLTWH(
                       0.0, 0.0, MediaQuery.of(context).size.width, 300.0),
                   userAgent: kAndroidUserAgent,
-                  invalidUrlRegex:
-                      r'^(https).+(twitter)', // prevent redirecting to twitter when user click on its icon in flutter website
                 );
               },
               child: const Text('Open Webview (rect)'),

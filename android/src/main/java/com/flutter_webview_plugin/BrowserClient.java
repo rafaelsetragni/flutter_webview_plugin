@@ -31,10 +31,12 @@ public class BrowserClient extends WebViewClient {
     private String LOG_TAG = "WebViewClient";
 
     private Pattern invalidUrlPattern = null;
+    private Pattern blockerUrlPattern = null;
     private Pattern validUrlHeaderPattern = null;
 
     private Map<Integer, String> statusCodeMapping = new HashMap<Integer, String>();
     private Map<String, Object> capturedHeaders = new HashMap<String, Object>();
+    private Map<String, byte[]> postData = new HashMap<String, byte[]>();
 
     private void prepareStatusCodeMapping () {
         statusCodeMapping.put(100, "Continue");
@@ -92,29 +94,45 @@ public class BrowserClient extends WebViewClient {
     }
 
     public BrowserClient(String invalidUrlRegex) {
-        this( invalidUrlRegex, null);
+        this( invalidUrlRegex, null, null);
     }
 
-    public BrowserClient(String invalidUrlRegex, String validUrlHeader) {
+    public BrowserClient(String invalidUrlRegex, String blockerUrlRegex) {
+        this( invalidUrlRegex, blockerUrlRegex, null);
+    }
+
+    public BrowserClient(String invalidUrlRegex, String blockerUrlRegex, String validUrlHeaderRegex) {
         super();
 
         this.prepareStatusCodeMapping();
 
         this.updateInvalidUrlRegex(invalidUrlRegex);
-        this.updateValidUrlHeaderRegex(validUrlHeader);
+        this.updateUrlBlockerRegex(blockerUrlRegex);
+        this.updateValidUrlHeaderRegex(validUrlHeaderRegex);
     }
 
     public void updateInvalidUrlRegex(String invalidUrlRegex) {
         if (invalidUrlRegex != null) {
             this.invalidUrlPattern = Pattern.compile(invalidUrlRegex, Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
+            Log.d(LOG_TAG, "Invalid regex applied: "+invalidUrlRegex);
         } else {
             this.invalidUrlPattern = null;
+        }
+    }
+
+    public void updateUrlBlockerRegex(String blockerUrlRegex) {
+        if (blockerUrlRegex != null) {
+            this.blockerUrlPattern = Pattern.compile(blockerUrlRegex, Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
+            Log.d(LOG_TAG, "URL block regex applied: "+blockerUrlRegex);
+        } else {
+            this.blockerUrlPattern = null;
         }
     }
 
     public void updateValidUrlHeaderRegex(String validUrlHeader) {
         if (validUrlHeader != null) {
             this.validUrlHeaderPattern = Pattern.compile(validUrlHeader, Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
+            Log.d(LOG_TAG, "Valid header regex applied: "+validUrlHeader);
         } else {
             this.validUrlHeaderPattern = null;
         }
@@ -123,12 +141,13 @@ public class BrowserClient extends WebViewClient {
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
+
+        capturedHeaders.clear();
+        postData.clear();
+
         Map<String, Object> data = new HashMap<>();
-        
         data.put("url", url);
         data.put("type", "startLoad");
-
-        this.capturedHeaders.clear();
 
         FlutterWebviewPlugin.channel.invokeMethod("onState", data);
     }
@@ -144,7 +163,7 @@ public class BrowserClient extends WebViewClient {
         data.put("type", "finishLoad");
         FlutterWebviewPlugin.channel.invokeMethod("onState", data);
 
-        data.put("headers", this.capturedHeaders);
+        data.put("headers", capturedHeaders);
         FlutterWebviewPlugin.channel.invokeMethod("afterHttpRequests", data);
     }
 
@@ -159,15 +178,30 @@ public class BrowserClient extends WebViewClient {
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
         // returning true causes the current WebView to abort loading the URL,
         // while returning false causes the WebView to continue loading the URL as usual.
-        boolean isInvalid = checkInvalidUrl(url);
+        boolean isInvalidUrlAction = checkInvalidUrl(url);
+        boolean isBlockedUrl = checkBlockedUrl(url);
 
         Map<String, Object> data = new HashMap<>();
         data.put("url", url);
-        data.put("type", isInvalid ? "abortLoad" : "shouldStart");
+
+        if(isInvalidUrlAction){
+
+            Log.d(LOG_TAG, "Invalid url: "+url);
+            data.put("navigationType", view.getHitTestResult().getType() == 0 ? null : view.getHitTestResult().getType());
+            data.put("type", "abortLoad");
+
+        } else if(isBlockedUrl){
+
+            Log.d(LOG_TAG, "Blocked url: "+url);
+            data.put("type", "blockedLoad");
+
+        } else {
+            data.put("type", "shouldStart");
+        }
 
         FlutterWebviewPlugin.channel.invokeMethod("onState", data);
 
-        return isInvalid;
+        return isInvalidUrlAction || isBlockedUrl;
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -179,7 +213,7 @@ public class BrowserClient extends WebViewClient {
 
         Log.d(LOG_TAG, httpMethod+": "+url);
 
-        if(!httpMethod.toLowerCase().equals("get")){// || checkvalidUrlHeader(url)){
+        if(!httpMethod.toLowerCase().equals("get") || !checkvalidUrlHeader(url)){
             return super.shouldInterceptRequest(view, origRequest);
         }
 
@@ -294,19 +328,45 @@ public class BrowserClient extends WebViewClient {
 
     private boolean checkInvalidUrl(String url) {
         if (invalidUrlPattern == null) {
+            Log.d(LOG_TAG, "Empty invalid url regex: "+url);
             return false;
         } else {
             Matcher matcher = invalidUrlPattern.matcher(url);
-            return matcher.lookingAt();
+
+            if(matcher.lookingAt()){
+                Log.d(LOG_TAG, "Invalid url matched: "+url);
+                return true;
+            }
+            Log.d(LOG_TAG, "valid url regex("+invalidUrlPattern.toString()+"): "+url);
+            return false;
+        }
+    }
+
+    private boolean checkBlockedUrl(String url) {
+        if (blockerUrlPattern == null) {
+            return false;
+        } else {
+            Matcher matcher = blockerUrlPattern.matcher(url);
+
+            if(matcher.lookingAt()){
+                Log.d(LOG_TAG, "Blocked url matched: "+url);
+                return true;
+            }
+            return false;
         }
     }
 
     private boolean checkvalidUrlHeader(String url) {
         if (validUrlHeaderPattern == null) {
-            return true;
+            return false;
         } else {
             Matcher matcher = validUrlHeaderPattern.matcher(url);
-            return matcher.lookingAt();
+
+            if(matcher.lookingAt()){
+                Log.d(LOG_TAG, "Valid url header matched: "+url);
+                return true;
+            }
+            return false;
         }
     }
 }

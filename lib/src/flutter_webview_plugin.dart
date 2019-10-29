@@ -10,7 +10,7 @@ import 'javascript_message.dart';
 const _kChannel = 'flutter_webview_plugin';
 
 // TODO: more general state for iOS/android
-enum WebViewState { shouldStart, startLoad, finishLoad, abortLoad }
+enum WebViewState { shouldStart, startLoad, finishLoad, abortLoad, blockedLoad }
 
 // TODO: use an id by webview to be able to manage multiple webview
 
@@ -171,6 +171,7 @@ class FlutterWebviewPlugin {
     bool allowFileURLs,
     bool useWideViewPort,
     String invalidUrlRegex,
+    String blockerUrlRegex,
     String validUrlHeaderRegex,
     bool geolocationEnabled,
     bool debuggingEnabled,
@@ -195,6 +196,7 @@ class FlutterWebviewPlugin {
       'useWideViewPort': useWideViewPort ?? false,
       'invalidUrlRegex': invalidUrlRegex,
       'validUrlHeaderRegex': validUrlHeaderRegex,
+      'blockerUrlRegex': blockerUrlRegex,
       'geolocationEnabled': geolocationEnabled ?? false,
       'withOverviewMode': withOverviewMode ?? false,
       'debuggingEnabled': debuggingEnabled ?? false,

@@ -120,7 +120,7 @@ class WebviewManager {
     boolean closed = false;
     WebView webView;
     Activity activity;
-    BrowserClient webViewClient;
+    BrowserClient browserClient;
     ResultHandler resultHandler;
     Context context;
 
@@ -130,7 +130,7 @@ class WebviewManager {
         this.context = context;
         this.resultHandler = new ResultHandler();
         this.platformThreadHandler = new Handler(context.getMainLooper());
-        webViewClient = new BrowserClient();
+        browserClient = new BrowserClient();
         webView.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -161,7 +161,8 @@ class WebviewManager {
             }
         });
 
-        webView.setWebViewClient(webViewClient);
+        webView.setWebViewClient(browserClient);
+
         webView.setWebChromeClient(new WebChromeClient() {
             //The undocumented magic method override
             //Eclipse will swear at you if you try to put @Override here
@@ -364,6 +365,8 @@ class WebviewManager {
             boolean allowFileURLs,
             boolean useWideViewPort,
             String invalidUrlRegex,
+            String validUrlHeaderRegex,
+            String blockerUrlRegex,
             boolean geolocationEnabled,
             boolean debuggingEnabled
     ) {
@@ -389,7 +392,17 @@ class WebviewManager {
             webView.setWebContentsDebuggingEnabled(debuggingEnabled);
         }
 
-        webViewClient.updateInvalidUrlRegex(invalidUrlRegex);
+        if (invalidUrlRegex != null) {
+            browserClient.updateInvalidUrlRegex(invalidUrlRegex);
+        }
+
+        if (validUrlHeaderRegex != null) {
+            browserClient.updateValidUrlHeaderRegex(validUrlHeaderRegex);
+        }
+
+        if (blockerUrlRegex != null) {
+            browserClient.updateUrlBlockerRegex(blockerUrlRegex);
+        }
 
         if (geolocationEnabled) {
             webView.getSettings().setGeolocationEnabled(true);

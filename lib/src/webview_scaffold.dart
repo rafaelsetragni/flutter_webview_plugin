@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_webview_plugin/src/javascript_channel.dart';
 
-import 'base.dart';
+import 'flutter_webview_plugin.dart';
 
 class WebviewScaffold extends StatefulWidget {
   const WebviewScaffold({

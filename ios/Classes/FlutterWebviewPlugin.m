@@ -2,6 +2,7 @@
 #import "JavaScriptChannelHandler.h"
 
 static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
+NSDictionary<NSString *, NSObject *> allHeaders;
 
 // UIWebViewDelegate
 @interface FlutterWebviewPlugin() <WKNavigationDelegate, UIScrollViewDelegate, WKUIDelegate> {
@@ -10,6 +11,7 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
     NSString* _invalidUrlRegex;
     NSString* _validUrlHeaderRegex;
     NSMutableSet* _javaScriptChannelNames;
+
 }
 @end
 
@@ -175,8 +177,13 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
 
 - (void)navigate:(FlutterMethodCall*)call {
     if (self.webview != nil) {
+            [allHeaders removeAllObjects];
+
             NSString *url = call.arguments[@"url"];
             NSNumber *withLocalUrl = call.arguments[@"withLocalUrl"];
+
+            allHeaders[@"url": url];
+
             if ( [withLocalUrl boolValue]) {
                 NSURL *htmlUrl = [NSURL fileURLWithPath:url isDirectory:false];
                 NSString *localUrlScope = call.arguments[@"localUrlScope"];
@@ -313,6 +320,23 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
   }
 }
 
+- (bool)checkValidUrlRegex:(NSURL*)url {
+  NSString* urlString = url != nil ? [url absoluteString] : nil;
+  if (_validUrlHeaderRegex!= [NSNull null] && urlString != nil) {
+    NSError* error = NULL;
+    NSRegularExpression* regex =
+        [NSRegularExpression regularExpressionWithPattern:_validUrlHeaderRegex
+                                                  options:NSRegularExpressionCaseInsensitive
+                                                    error:&error];
+    NSTextCheckingResult* match = [regex firstMatchInString:urlString
+                                                    options:0
+                                                      range:NSMakeRange(0, [urlString length])];
+    return match != nil;
+  } else {
+    return false;
+  }
+}
+
 #pragma mark -- WkWebView Delegate
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
     decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
@@ -371,6 +395,7 @@ static NSString *const CHANNEL_NAME = @"flutter_webview_plugin";
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler {
     if ([navigationResponse.response isKindOfClass:[NSHTTPURLResponse class]]) {
         NSHTTPURLResponse * response = (NSHTTPURLResponse *)navigationResponse.response;
+        NSDictionary *responseHeaders = response.allHeaderFields;
 
         [channel invokeMethod:@"onHttpError" arguments:@{@"code": [NSString stringWithFormat:@"%ld", response.statusCode], @"url": webView.URL.absoluteString}];
     }

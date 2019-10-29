@@ -4,6 +4,9 @@ description: Demonstrates how to use the flutter_webview_plugin plugin.
 dependencies:
   flutter:
     sdk: flutter
+
+  url_launcher: ^3.0.2
+
   flutter_webview_plugin:
     path: ../
 

@@ -3,9 +3,12 @@ package com.flutter_webview_plugin;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.webkit.WebView;
+import android.util.Log;
 
 public class ObservableWebView extends WebView {
     private OnScrollChangedCallback mOnScrollChangedCallback;
+
+    private String LOG_TAG = "ObservableWebView";
 
     public ObservableWebView(final Context context)
     {
@@ -20,6 +23,11 @@ public class ObservableWebView extends WebView {
     public ObservableWebView(final Context context, final AttributeSet attrs, final int defStyle)
     {
         super(context, attrs, defStyle);
+    }
+
+    @Override
+    public void postUrl(String url, byte[] postData){
+        Log.d(LOG_TAG, "Post data: " + url);
     }
 
     @Override
