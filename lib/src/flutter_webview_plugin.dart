@@ -245,7 +245,9 @@ class FlutterWebviewPlugin {
     await _channel.invokeMethod('close');
   }
 
-  Future<String> getUserAgent() async => await _channel.invokeMethod('getNativeUserAgent');
+  Future<String> getUserAgent() async {
+    return await _channel.invokeMethod('getNativeUserAgent');
+  }
 
   /// Reloads the WebView.
   Future<Null> reload() async => await _channel.invokeMethod('reload');

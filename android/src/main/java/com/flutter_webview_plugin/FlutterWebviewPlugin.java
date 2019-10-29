@@ -76,6 +76,9 @@ public class FlutterWebviewPlugin implements MethodCallHandler, PluginRegistry.A
             case "reloadUrl":
                 reloadUrl(call, result);
                 break;
+            case "getNativeUserAgent":
+                getNativeUserAgent(call, result);
+                break;
             case "stopLoading":
                 stopLoading(call, result);
                 break;
@@ -211,6 +214,12 @@ public class FlutterWebviewPlugin implements MethodCallHandler, PluginRegistry.A
             webViewManager.reload(call, result);
         }
         result.success(null);
+    }
+
+    private void getNativeUserAgent(MethodCall call, MethodChannel.Result result) {
+        if (webViewManager != null) {
+            result.success(webViewManager.getNativeUserAgent(call, result));
+        }
     }
 
     private void reloadUrl(MethodCall call, MethodChannel.Result result) {

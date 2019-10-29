@@ -439,12 +439,15 @@ class WebviewManager {
         }
     }
 
-    void reloadUrl(String url) {
-        webView.loadUrl(url);
+    String getNativeUserAgent(MethodCall call, MethodChannel.Result result) {
+        if (webView != null) {
+            return "teste"/*webView.getSettings().getUserAgentString()*/;
+        }
+        return null;
     }
 
-    String getNativeUserAgent(){
-        return webView.getSettings().getUserAgentString();
+    void reloadUrl(String url) {
+        webView.loadUrl(url);
     }
 
     void reloadUrl(String url, Map<String, String> headers) {
