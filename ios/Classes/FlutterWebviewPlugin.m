@@ -345,7 +345,7 @@ NSDictionary<NSString *, NSObject *> allHeaders;
 
     id data = @{@"url": navigationAction.request.URL.absoluteString,
                 @"type": isInvalid ? @"abortLoad" : @"shouldStart",
-                @"navigationType": numberWithInt:navigationAction.navigationType == WKNavigationTypeLinkActivated};
+                @"navigationType": [NSNumber numberWithInt:navigationAction.navigationType]};
     [channel invokeMethod:@"onState" arguments:data];
 
     if (navigationAction.navigationType == WKNavigationTypeBackForward) {
