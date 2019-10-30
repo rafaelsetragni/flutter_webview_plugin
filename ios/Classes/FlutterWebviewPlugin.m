@@ -74,9 +74,9 @@ NSDictionary<NSString *, NSObject *> allHeaders;
         result(nil);
     } else if ([@"reload" isEqualToString:call.method]) {
         [self reload];
-    } else if ([@"getNativeUserAgent" isEqualToString:call.method]) {
+    } else if ([@"getUserAgent" isEqualToString:call.method]) {
         [self reload];
-        getNativeUserAgent(nil);
+        getUserAgent(nil);
     } else {
         result(FlutterMethodNotImplemented);
     }

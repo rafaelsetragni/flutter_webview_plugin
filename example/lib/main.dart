@@ -21,15 +21,16 @@ void main() async {
   final String packageName = packageInfo.packageName;
   final String version = packageInfo.version;
   final String buildNumber = packageInfo.buildNumber;
+  final String userAgentApp = appName.replaceAll(' ', '_');
 
   String baseUserAgent;
   if (Platform.isAndroid) {
     final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    baseUserAgent = '${appName}/${buildNumber} (Linux; Flutter/${androidInfo.version.sdkInt}; Android ${androidInfo.version.release}; ${androidInfo.model} Build/${androidInfo.id})';
+    baseUserAgent = '${userAgentApp}/${buildNumber} (Linux; Flutter/${androidInfo.version.sdkInt}; Android ${androidInfo.version.release}; ${androidInfo.model} Build/${androidInfo.id})';
   } else
   if (Platform.isIOS) {
     final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-    baseUserAgent = '${appName}/${buildNumber} (${iosInfo.utsname.release}; ${iosInfo.utsname.machine})';
+    baseUserAgent = '${userAgentApp}/${buildNumber} (${iosInfo.utsname.release}; ${iosInfo.utsname.machine})';
   }
 
   final configuredApp = new AppConfig(
@@ -39,11 +40,11 @@ void main() async {
       packageName: packageName,
       version: version,
       flavorName: 'development',
+      domain: 'buildblocks.prodemge.gov.br',//'flutter.io',
       startsWithHttps: true,
-      domain: 'youtube.com',
       baseUserAgent: baseUserAgent,
       theme: const {
-        'primaryColor' : '#a51523',
+        'primaryColor' : '#A51523',
       },
       oAuthIds: const {
         'facebook' : '00000000000000',

@@ -57,11 +57,6 @@ class _WebviewWidget extends State<WebviewWidget> {
 
     flutterWebViewPlugin.close();
 
-    final Future<String> future = flutterWebViewPlugin.getUserAgent();
-    future.then((value){
-      originalUserAgent = value;
-    });
-
     // Add a listener to on destroy WebView, so you can make came actions.
     onDestroy = flutterWebViewPlugin.onDestroy.listen((_) {
       if (mounted) {
@@ -191,7 +186,7 @@ class _WebviewWidget extends State<WebviewWidget> {
         )
     );
 
-    final String fullDomain = config.getFullDomainUrl();
+    final String mainDomain = config.domain;
 
     Future<bool> _onHistoryBack() {
       //return new Future(() => false);
@@ -209,12 +204,14 @@ class _WebviewWidget extends State<WebviewWidget> {
                 padding: EdgeInsets.only(top: mediaContext.padding.top),
                 child: WebviewScaffold(
                     url: widget.initialUrl,
+                    userAgent: widget.config.baseUserAgent,
                     javascriptChannels: jsChannels,
                     withZoom: false,
                     hidden: true,
+                    resizeToAvoidBottomInset: true,
                     withLocalStorage: true,
-                    invalidUrlRegex: r'^((?!\Q' + fullDomain + r'\E)\S)*$',
-                    validUrlHeaderRegex: r'^\Q' + fullDomain + r'\E(\/\S*)?$',
+                    invalidUrlRegex: r'^(?!(https?:\/\/(?:\w+\.)*\Q' + mainDomain + r'\E(\/\S*)*)$)',
+                    validUrlHeaderRegex: r'^(https?:\/\/(?:\w+\.)*\Q' + mainDomain + r'\E(\/\S*)*)$',
                     initialChild: backgroundApp
                 )
             )

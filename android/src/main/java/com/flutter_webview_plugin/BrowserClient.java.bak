@@ -155,14 +155,14 @@ public class BrowserClient extends WebViewClient {
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
 
-        Log.d(LOG_TAG, "onPageStarted: "+url);
+        Log.d(TAG, "onPageStarted: "+url);
+
+        capturedHeaders.clear();
+        postData.clear();
 
         Map<String, Object> data = new HashMap<>();
         data.put("url", url);
         data.put("type", "startLoad");
-
-        capturedHeaders.clear();
-        postData.clear();
 
         FlutterWebviewPlugin.channel.invokeMethod("onState", data);
     }
@@ -176,11 +176,9 @@ public class BrowserClient extends WebViewClient {
         FlutterWebviewPlugin.channel.invokeMethod("onUrlChanged", data);
 
         data.put("type", "finishLoad");
-        Log.d(LOG_TAG, "onState finishLoad invoked");
         FlutterWebviewPlugin.channel.invokeMethod("onState", data);
 
         data.put("headers", capturedHeaders);
-        Log.d(LOG_TAG, "afterHttpRequests invoked");
         FlutterWebviewPlugin.channel.invokeMethod("afterHttpRequests", data);
     }
 
@@ -244,9 +242,7 @@ public class BrowserClient extends WebViewClient {
         }
 
         try {
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .retryOnConnectionFailure(true)
-                    .build();
+            OkHttpClient client = new OkHttpClient();
 
             Map<String, String> requestHeaders  = origRequest.getRequestHeaders();
             Map<String, String> responseHeaders = new HashMap<String, String>();
@@ -261,23 +257,7 @@ public class BrowserClient extends WebViewClient {
 
             long startTime = System.currentTimeMillis();
             startTime = (startTime < 0) ? 0 : startTime;
-
-            int retries = 0;
-            int limitRetries = 5;
-            okhttp3.Response response = null;
-
-            do{
-                try {
-                        response = client.newCall(request).execute();
-                } catch (Exception e) {
-                    //e.printStackTrace();
-                    retries++;
-                    Log.d(LOG_TAG, "Exception founded: " + e.getMessage() + " (" + retries + ")");
-                }
-            } while (response == null && retries < limitRetries);
-
-            if(response == null)
-               return null;
+            okhttp3.Response response = client.newCall(request).execute();
 
             long duration = (response.cacheResponse() != null) ?
                     0 : System.currentTimeMillis() - startTime;
@@ -302,7 +282,7 @@ public class BrowserClient extends WebViewClient {
             InputStream dataStream = new ByteArrayInputStream(dataBytes);
 
             String[] arrOfContent;
-            String completeContentType = responseHeaders.get("Content-Type");
+            String completeContentType = responseHeaders.get("content-type");
 
             if(completeContentType != null){
                 arrOfContent = completeContentType.split(";");
@@ -310,7 +290,7 @@ public class BrowserClient extends WebViewClient {
                 arrOfContent = new String[0];
             }
 
-            String mimeType = "application/octet-stream"; // "application/binary"; //
+            String mimeType = "application/binary";
             String encoding = null;
 
             if(arrOfContent.length > 0) mimeType = arrOfContent[0].trim();
@@ -332,6 +312,7 @@ public class BrowserClient extends WebViewClient {
             data.put("requestHeaders",  requestHeaders);
             data.put("responseHeaders", responseHeaders);
 
+            Log.d(LOG_TAG, "Headers captured: "+url);
             this.capturedHeaders.put(url, data);
 
             return new WebResourceResponse(
@@ -340,7 +321,7 @@ public class BrowserClient extends WebViewClient {
                 httpCode,
                 httpMessage,
                 responseHeaders,
-                dataStream // response.body().byteStream() //
+                dataStream
             );
 
         } catch (Exception e) {

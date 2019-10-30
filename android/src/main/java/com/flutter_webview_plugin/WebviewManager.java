@@ -18,6 +18,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import androidx.core.content.FileProvider;
 
@@ -28,6 +29,10 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import java.io.File;
 import java.util.Date;
 import java.io.IOException;
@@ -44,11 +49,15 @@ import static android.app.Activity.RESULT_OK;
 
 class WebviewManager {
 
+    private String LOG_TAG = "WebviewManager";
+
     private ValueCallback<Uri> mUploadMessage;
     private ValueCallback<Uri[]> mUploadMessageArray;
     private final static int FILECHOOSER_RESULTCODE = 1;
     private Uri fileUri;
     private Uri videoUri;
+
+    public String nativeUserAgent = "NA";
 
     private long getFileSize(Uri fileUri) {
         Cursor returnCursor = context.getContentResolver().query(fileUri, null, null, null, null);
@@ -424,8 +433,25 @@ class WebviewManager {
             clearCookies();
         }
 
+        nativeUserAgent = webView.getSettings().getUserAgentString();
+        Log.d(LOG_TAG, "Native User Agent: "+nativeUserAgent);
+
         if (userAgent != null) {
-            webView.getSettings().setUserAgentString(userAgent);
+
+            final String regex = "(^[^)]+\\)) (.*)";
+
+            final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+            final Matcher matcher1 = pattern.matcher(userAgent);
+            final Matcher matcher2 = pattern.matcher(nativeUserAgent);
+
+            final String halfUserAgent = matcher1.replaceAll("$1");
+            final String halfNativeUserAgent = matcher2.replaceAll("$2");
+
+            final String combinedUserAgent = halfUserAgent+" "+halfNativeUserAgent;
+            Log.d(LOG_TAG, "Defined User Agent: "+userAgent);
+            Log.d(LOG_TAG, "New User Agent: "+combinedUserAgent);
+
+            webView.getSettings().setUserAgentString(combinedUserAgent);
         }
 
         if (!scrollBar) {
@@ -439,11 +465,8 @@ class WebviewManager {
         }
     }
 
-    String getNativeUserAgent(MethodCall call, MethodChannel.Result result) {
-        if (webView != null) {
-            return "teste"/*webView.getSettings().getUserAgentString()*/;
-        }
-        return null;
+    String getNativeUserAgent() {
+        return nativeUserAgent;
     }
 
     void reloadUrl(String url) {

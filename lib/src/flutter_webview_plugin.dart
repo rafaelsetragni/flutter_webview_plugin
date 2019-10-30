@@ -86,7 +86,7 @@ class FlutterWebviewPlugin {
         break;
       case 'afterHttpRequests':
         _afterHttpRequests.add(
-            new WebViewHeaders(call.arguments['url'], call.arguments['headers'])
+            WebViewHeaders(call.arguments['url'], call.arguments['headers'])
         );
         break;
     }
@@ -246,7 +246,7 @@ class FlutterWebviewPlugin {
   }
 
   Future<String> getUserAgent() async {
-    return await _channel.invokeMethod('getNativeUserAgent');
+    return await _channel.invokeMethod('getUserAgent');
   }
 
   /// Reloads the WebView.

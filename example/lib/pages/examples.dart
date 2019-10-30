@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_webview_plugin_example/util/config.dart';
 import 'package:flutter_webview_plugin_example/pages/webview_widget.dart';
+import 'package:flutter_webview_plugin_example/pages/webview_fullscreen.dart';
 
 class ExamplesPage extends StatefulWidget {
 
@@ -77,8 +78,15 @@ class _ExamplesPageState extends State<ExamplesPage> {
                 ),
                 RaisedButton(
                   child: const Text('Fullscreen Webview'),
-                  onPressed: () {
-                  },
+                  onPressed: () => Navigator.push(
+                      context,
+                      new MaterialPageRoute(builder: (context) =>
+                          WebviewFullScreen(
+                              initialUrl: _urlCtrl.text,
+                              config: config
+                          )
+                      )
+                  ),
                 ),
                 RaisedButton(
                   child: const Text('Widget Webview'),
