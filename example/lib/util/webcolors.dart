@@ -1,40 +1,36 @@
-import 'package:flutter/material.dart';
+import 'dart:math' as math;
+import 'dart:ui';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
+
+// ignore: avoid_classes_with_only_static_members
 class WebColor{
 
-  static final Map<String, double> intensities = {
-    "50":  0.9,
-    "100": 0.7,
-    "200": 0.5,
-    "300": 0.333,
-    "400": 0.166,
-    "500": 0,
-    "600": -0.125,
-    "700": -0.25,
-    "800": -0.375,
-    "900": -0.5,
-    "A100": 0.7,
-    "A200": 0.5,
-    "A400": 0.166,
-    "A700": -0.25
-  };
+  static Color lighten(Color color, double fraction) {
 
-  static Color shade(String intensity, int mainColor){
+    final int red   = lightenColor(color.red, fraction);
+    final int green = lightenColor(color.green, fraction);
+    final int blue  = lightenColor(color.blue, fraction);
 
-    int f = mainColor;
-    double percent = intensities[intensity];
-    double t = percent < 0 ? 0 : 255;
-    double p = percent < 0 ? percent * -1 : percent;
+    return Color.fromARGB(color.alpha, red, green, blue);
+  }
 
-    int R = f >> 16;
-    int G = f >> 8 & 0x00FF;
-    int B = f & 0x0000FF;
+  static Color darken(Color color, double fraction) {
 
-    double red   = ((t - R).round() * p) + R;
-    double green = ((t - G).round() * p) + G;
-    double blue  = ((t - B).round() * p) + B;
+    final int red   = darkenColor(color.red, fraction);
+    final int green = darkenColor(color.green, fraction);
+    final int blue  = darkenColor(color.blue, fraction);
 
-    return Color.fromARGB(255, red.round(), green.round(), blue.round());
+    return Color.fromARGB(color.alpha, red, green, blue);
+  }
+
+  static int darkenColor(int color, double fraction) {
+    return math.max((color - (color * fraction)).round(), 0);
+  }
+
+  static int lightenColor(int color, double fraction) {
+    return math.min((color + (color * fraction)).round(), 255);
   }
 
   static Color getColor(String hexColor) {
@@ -42,28 +38,30 @@ class WebColor{
   }
 
   static MaterialColor getMaterialColor(String hexColor){
-    final int mainColor = _fromHex(hexColor);
+    final Color mainColor = getColor(hexColor);
     return MaterialColor(
-      mainColor,
+      _fromHex(hexColor),
       <int, Color>{
-        50:  shade("50",  mainColor),
-        100: shade("100", mainColor),
-        200: shade("200", mainColor),
-        300: shade("300", mainColor),
-        400: shade("400", mainColor),
-        500: shade("500", mainColor),
-        600: shade("600", mainColor),
-        700: shade("700", mainColor),
-        800: shade("800", mainColor),
-        900: shade("900", mainColor),
+        50:  WebColor.lighten(mainColor, 52),
+        100: WebColor.lighten(mainColor, 37),
+        200: WebColor.lighten(mainColor, 26),
+        300: WebColor.lighten(mainColor, 12),
+        400: WebColor.lighten(mainColor, 6),
+
+        500: WebColor.lighten(mainColor, 0),
+
+        600: WebColor.darken(mainColor, 6),
+        700: WebColor.darken(mainColor, 12),
+        800: WebColor.darken(mainColor, 18),
+        900: WebColor.darken(mainColor, 24),
       },
     );
   }
 
   static int _fromHex(String hexColor) {
-    hexColor = hexColor.toUpperCase().replaceAll("#", "");
+    hexColor = hexColor.toUpperCase().replaceAll('#', '');
     if (hexColor.length == 6) {
-      hexColor = "FF" + hexColor;
+      hexColor = 'FF' + hexColor;
     }
     return int.parse(hexColor, radix: 16);
   }
