@@ -5,37 +5,37 @@ import 'package:mockito/mockito.dart';
 
 void main() {
   MockMethodChannel methodChannel;
-  FlutterWebviewPlugin webview;
+  FlutterWebviewPlugin webView;
 
   setUp(() {
     methodChannel = MockMethodChannel();
-    webview = new FlutterWebviewPlugin.private(methodChannel);
+    webView = new FlutterWebviewPlugin.private(methodChannel);
   });
 
 
   group('Method channel invoke', () {
     test('Should invoke close', () async {
-      webview.close();
+      webView.close();
       verify(methodChannel.invokeMethod('close')).called(1);
     });
     test('Should invoke reload', () async {
-      webview.reload();
+      webView.reload();
       verify(methodChannel.invokeMethod('reload')).called(1);
     });
     test('Should invoke goBack', () async {
-      webview.goBack();
+      webView.goBack();
       verify(methodChannel.invokeMethod('back')).called(1);
     });
     test('Should invoke goForward', () async {
-      webview.goForward();
+      webView.goForward();
       verify(methodChannel.invokeMethod('forward')).called(1);
     });
     test('Should invoke hide', () async {
-      webview.hide();
+      webView.hide();
       verify(methodChannel.invokeMethod('hide')).called(1);
     });
     test('Should invoke show', () async {
-      webview.show();
+      webView.show();
       verify(methodChannel.invokeMethod('show')).called(1);
     });
   });

@@ -1,81 +1,31 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 
 import 'package:flutter_webview_plugin_example/util/config.dart';
 import 'package:flutter_webview_plugin_example/pages/examples.dart';
 import 'package:flutter_webview_plugin_example/util/webcolors.dart';
 
-import 'package:device_info/device_info.dart';
-import 'package:package_info/package_info.dart';
-
-import 'package:shared_preferences/shared_preferences.dart';
-
 void main() async {
-
-  //SharedPreferences config = await SharedPreferences.getInstance();
-  final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-
-  final PackageInfo packageInfo = await PackageInfo.fromPlatform();
-
-  final String appName = packageInfo.appName;
-  final String packageName = packageInfo.packageName;
-  final String version = packageInfo.version;
-  final String buildNumber = packageInfo.buildNumber;
-  final String userAgentApp = appName.replaceAll(' ', '_');
-
-  String baseUserAgent;
-  if (Platform.isAndroid) {
-    final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    baseUserAgent = '${userAgentApp}/${buildNumber} (Linux; Flutter/${androidInfo.version.sdkInt}; Android ${androidInfo.version.release}; ${androidInfo.model} Build/${androidInfo.id})';
-  } else
-  if (Platform.isIOS) {
-    final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-    baseUserAgent = '${userAgentApp}/${buildNumber} (${iosInfo.utsname.release}; ${iosInfo.utsname.machine})';
-  }
-
-  final configuredApp = new AppConfig(
-      appName: appName+' DEV',
-      appId:   packageName,
-      buildNumber: buildNumber,
-      packageName: packageName,
-      version: version,
-      flavorName: 'development',
-      domain: 'buildblocks.prodemge.gov.br',//'flutter.io',
-      startsWithHttps: true,
-      baseUserAgent: baseUserAgent,
-      theme: const {
-        'primaryColor' : '#A51523',
-      },
-      oAuthIds: const {
-        'facebook' : '00000000000000',
-        'google'   : '00000000000000',
-        'twitter'  : '00000000000000'
-      },
-      preferences: await SharedPreferences.getInstance(),
-      child: new MyApp(),
-  );
-
-  runApp(configuredApp);
+  runApp(await AppConfig.getConfig(new MyApp()));
 }
 
 class MyApp extends StatelessWidget {
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     final config = AppConfig.of(context);
 
-    final MaterialColor primaryColor = WebColor.getMaterialColor(config.theme['primaryColor']);
-    final Color mainColor = primaryColor.shade500;
+    final MaterialColor primaryColor = WebColor.googleMaterialColorFromHex(config.theme['primaryColor']);
 
     return MaterialApp(
         title: config.appName,
         color: Colors.white,
         theme: ThemeData(
 
-          brightness: Brightness.light,
-          primaryColor: mainColor,
-          accentColor: mainColor,
-          primarySwatch: primaryColor,
+          brightness:     Brightness.light,
+          primaryColor:   primaryColor.shade500,
+          accentColor:    primaryColor.shade500,
+          primarySwatch:  primaryColor,
 
           // Define the default font family.
           //fontFamily: 'Montserrat',
@@ -83,8 +33,8 @@ class MyApp extends StatelessWidget {
           // ignore: prefer_const_constructors
           textTheme: TextTheme(
             headline: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
-            title: TextStyle(fontSize: 24.0, fontStyle: FontStyle.normal),
-            body1: TextStyle(fontSize: 14.0, fontFamily: 'Hind'),
+            title:    TextStyle(fontSize: 24.0, fontStyle: FontStyle.normal),
+            body1:    TextStyle(fontSize: 14.0, fontFamily: 'Hind'),
           ),
 
         ),
