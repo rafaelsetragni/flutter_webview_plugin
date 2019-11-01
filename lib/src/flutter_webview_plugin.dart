@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -42,7 +43,7 @@ class FlutterWebviewPlugin {
   final _onProgressChanged = new StreamController<double>.broadcast();
   final _onHttpError = StreamController<WebViewHttpError>.broadcast();
   final _onPostMessage = StreamController<JavascriptMessage>.broadcast();
-  final _afterHttpRequests = StreamController<WebViewHeaders>.broadcast();
+  final _afterHttpRequest = StreamController<WebViewHeaders>.broadcast();
 
   final Map<String, JavascriptChannel> _javascriptChannels =
       // ignoring warning as min SDK version doesn't support collection literals yet
@@ -84,10 +85,20 @@ class FlutterWebviewPlugin {
         _handleJavascriptChannelMessage(
             call.arguments['channel'], call.arguments['message']);
         break;
-      case 'afterHttpRequests':
-        _afterHttpRequests.add(
-            WebViewHeaders(call.arguments['url'], call.arguments['headers'])
-        );
+      case 'afterHttpRequest':
+        _afterHttpRequest.add( WebViewHeaders(
+            call.arguments['baseUrl'],
+            call.arguments['httpMethod'],
+            call.arguments['httpCode'],
+            call.arguments['httpMessage'],
+            call.arguments['mimeType'],
+            call.arguments['encoding'],
+            call.arguments['startTime'],
+            call.arguments['duration'],
+            call.arguments['size'],
+            Map<String, String>.from(call.arguments['requestHeaders']),
+            Map<String, String>.from(call.arguments['responseHeaders'])
+        ));
         break;
     }
   }
@@ -117,7 +128,7 @@ class FlutterWebviewPlugin {
 
   Stream<WebViewHttpError> get onHttpError => _onHttpError.stream;
 
-  Stream<WebViewHeaders> get afterHttpRequests => _afterHttpRequests.stream;
+  Stream<WebViewHeaders> get afterHttpRequest => _afterHttpRequest.stream;
 
   /// Start the Webview with [url]
   /// - [headers] specify additional HTTP headers
@@ -291,7 +302,7 @@ class FlutterWebviewPlugin {
     _onScrollYChanged.close();
     _onHttpError.close();
     _onPostMessage.close();
-    _afterHttpRequests.close();
+    _afterHttpRequest.close();
 
     _instance = null;
   }
@@ -381,8 +392,35 @@ class WebViewHttpError {
 }
 
 class WebViewHeaders {
-  WebViewHeaders(this.baseUrl, this.headers);
 
   final String baseUrl;
-  final Map<String, Object> headers;
+  final String httpMethod;
+  final int httpCode;
+  final String httpMessage;
+
+  final String mimeType;
+  final String encoding;
+
+  final int startTime;
+  final int duration;
+  final int size;
+
+  final Map<String, String> requestHeaders;
+  final Map<String, String> responseHeaders;
+
+  WebViewHeaders(
+    this.baseUrl,
+    this.httpMethod,
+    this.httpCode,
+    this.httpMessage,
+
+    this.mimeType,
+    this.encoding,
+
+    this.startTime,
+    this.duration,
+    this.size,
+    this.requestHeaders,
+    this.responseHeaders,
+  );
 }

@@ -11,6 +11,7 @@ import android.webkit.WebViewClient;
 import android.webkit.WebSettings;
 import android.webkit.SslErrorHandler;
 import android.net.http.SslError;
+import android.os.*;
 
 import android.util.Log;
 
@@ -34,6 +35,8 @@ import java.util.regex.Pattern;
  */
 
 public class BrowserClient extends WebViewClient {
+
+    private Handler uiThreadHandler = new Handler(Looper.getMainLooper());
 
     private String LOG_TAG = BrowserClient.class.getSimpleName();
 
@@ -161,9 +164,6 @@ public class BrowserClient extends WebViewClient {
         data.put("url", url);
         data.put("type", "startLoad");
 
-        capturedHeaders.clear();
-        postData.clear();
-
         FlutterWebviewPlugin.channel.invokeMethod("onState", data);
     }
 
@@ -178,10 +178,6 @@ public class BrowserClient extends WebViewClient {
         data.put("type", "finishLoad");
         Log.d(LOG_TAG, "onState finishLoad invoked");
         FlutterWebviewPlugin.channel.invokeMethod("onState", data);
-
-        data.put("headers", capturedHeaders);
-        Log.d(LOG_TAG, "afterHttpRequests invoked");
-        FlutterWebviewPlugin.channel.invokeMethod("afterHttpRequests", data);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -239,7 +235,10 @@ public class BrowserClient extends WebViewClient {
 
         Log.d(LOG_TAG, httpMethod+": "+url);
 
+        // POST and DELETE not implemented yet
         if(!httpMethod.toLowerCase().equals("get") || !checkvalidUrlHeader(url)){
+
+            postData.remove(url);
             return super.shouldInterceptRequest(view, origRequest);
         }
 
@@ -318,6 +317,8 @@ public class BrowserClient extends WebViewClient {
 
             final Map<String, Object> data = new HashMap<>();
 
+            data.put("baseUrl",  url);
+
             data.put("httpMethod",  httpMethod);
             data.put("httpCode",    httpCode);
             data.put("httpMessage", httpMessage);
@@ -332,15 +333,23 @@ public class BrowserClient extends WebViewClient {
             data.put("requestHeaders",  requestHeaders);
             data.put("responseHeaders", responseHeaders);
 
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    FlutterWebviewPlugin.channel.invokeMethod("afterHttpRequest", data);
+                }
+            });
+
             this.capturedHeaders.put(url, data);
 
+            postData.remove(url);
             return new WebResourceResponse(
                 mimeType,
                 encoding,
                 httpCode,
                 httpMessage,
                 responseHeaders,
-                dataStream // response.body().byteStream() //
+                dataStream
             );
 
         } catch (Exception e) {
@@ -348,6 +357,7 @@ public class BrowserClient extends WebViewClient {
             Log.d(LOG_TAG, e.getMessage());
         }
 
+        postData.remove(url);
         return null;
     }
 

@@ -29,6 +29,7 @@ class WebviewFullScreen extends StatefulWidget {
 class _WebviewFullScreen extends State<WebviewFullScreen> {
 
   final flutterWebViewPlugin = FlutterWebviewPlugin();
+  AppConfig config;
 
   String originalUserAgent;
 
@@ -41,7 +42,7 @@ class _WebviewFullScreen extends State<WebviewFullScreen> {
   // On urlChanged stream
   StreamSubscription<WebViewStateChanged> onStateChanged;
   StreamSubscription<WebViewHttpError> onHttpError;
-  StreamSubscription<WebViewHeaders> afterHttpRequests;
+  StreamSubscription<WebViewHeaders> afterHttpRequest;
   StreamSubscription<double> onProgressChanged;
   StreamSubscription<double> onScrollYChanged;
   StreamSubscription<double> onScrollXChanged;
@@ -113,7 +114,7 @@ class _WebviewFullScreen extends State<WebviewFullScreen> {
                   case WebViewState.abortLoad:
                       // WKNavigationType linkActivated
                       if(state.navigationType == 7){
-                        debugPrint("Opening external browser: ${state.url}");
+                        debugPrint('Opening external browser: ${state.url}');
                         launch(state.url);
                       }
                       break;
@@ -135,11 +136,20 @@ class _WebviewFullScreen extends State<WebviewFullScreen> {
           }
         });
 
-    afterHttpRequests =
-        flutterWebViewPlugin.afterHttpRequests.listen((WebViewHeaders headers) {
+    afterHttpRequest =
+        flutterWebViewPlugin.afterHttpRequest.listen((WebViewHeaders headers) {
           if (mounted) {
             setState(() {
-              _history.add('afterHttpRequests: ${headers.baseUrl}');
+              switch(headers.baseUrl){
+
+                case 'https://buildblocks.prodemge.gov.br/pages/home':
+                  if(headers.responseHeaders.containsKey('Bearer-Token')){
+                      config.preferences.setString('token', headers.responseHeaders['Bearer-Token']);
+                  }
+                  break;
+
+              }
+              _history.add('afterHttpRequest: ${headers.baseUrl}');
             });
           }
         });
@@ -155,7 +165,7 @@ class _WebviewFullScreen extends State<WebviewFullScreen> {
     onProgressChanged.cancel();
     onScrollXChanged.cancel();
     onScrollYChanged.cancel();
-    afterHttpRequests.cancel();
+    afterHttpRequest.cancel();
 
     flutterWebViewPlugin.dispose();
 
@@ -164,7 +174,7 @@ class _WebviewFullScreen extends State<WebviewFullScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final config = AppConfig.of(context);
+    config = AppConfig.of(context);
 
     final Color backgroundColor = WebColor.getColor(widget.config.theme['primaryColor']);
 
@@ -196,6 +206,7 @@ class _WebviewFullScreen extends State<WebviewFullScreen> {
     );
 
     final String mainDomain = config.domain;
+    final String bearerToken = config.preferences.getString('token');
 
     Future<bool> _onHistoryBack() {
       //return new Future(() => false);
@@ -215,6 +226,9 @@ class _WebviewFullScreen extends State<WebviewFullScreen> {
                     url: widget.initialUrl,
                     userAgent: widget.config.baseUserAgent,
                     javascriptChannels: jsChannels,
+                    headers: {
+                      'Bearer-Token': bearerToken
+                    },
                     withZoom: false,
                     hidden: true,
                     withLocalStorage: true,

@@ -41,7 +41,7 @@ class _WebviewWidget extends State<WebviewWidget> {
   // On urlChanged stream
   StreamSubscription<WebViewStateChanged> onStateChanged;
   StreamSubscription<WebViewHttpError> onHttpError;
-  StreamSubscription<WebViewHeaders> afterHttpRequests;
+  StreamSubscription<WebViewHeaders> afterHttpRequest;
   StreamSubscription<double> onProgressChanged;
   StreamSubscription<double> onScrollYChanged;
   StreamSubscription<double> onScrollXChanged;
@@ -126,11 +126,11 @@ class _WebviewWidget extends State<WebviewWidget> {
           }
         });
 
-    afterHttpRequests =
-        flutterWebViewPlugin.afterHttpRequests.listen((WebViewHeaders headers) {
+    afterHttpRequest =
+        flutterWebViewPlugin.afterHttpRequest.listen((WebViewHeaders headers) {
           if (mounted) {
             setState(() {
-              _history.add('afterHttpRequests: ${headers.baseUrl}');
+              _history.add('afterHttpRequest: ${headers.baseUrl}');
             });
           }
         });
@@ -146,7 +146,7 @@ class _WebviewWidget extends State<WebviewWidget> {
     onProgressChanged.cancel();
     onScrollXChanged.cancel();
     onScrollYChanged.cancel();
-    afterHttpRequests.cancel();
+    afterHttpRequest.cancel();
 
     flutterWebViewPlugin.dispose();
 

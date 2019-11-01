@@ -47,9 +47,8 @@ android {
     }
 
     testOptions {
-        unitTests {
-            includeAndroidResources = true
-        }
+        unitTests.returnDefaultValues = true
+        unitTests.includeAndroidResources = true
     }
 }
 dependencies {
@@ -69,5 +68,8 @@ dependencies {
         testImplementation files(System.getProperty('flutterPath') + '/bin/cache/artifacts/engine/android-x64/flutter.jar')
     }
 
-    testImplementation 'org.mockito:mockito-inline:2.28.2'
+    testImplementation "junit:junit:4.11"
+    testImplementation "org.mockito:mockito-core:2.+"
+    testImplementation "org.powermock:powermock-api-mockito:1.6.2"
+    testImplementation "org.powermock:powermock-module-junit4:1.6.2"
 }

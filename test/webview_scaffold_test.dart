@@ -4,9 +4,13 @@ import 'package:flutter_webview_plugin/imports.dart';
 import 'package:mockito/mockito.dart';
 
 class WebViewTest {
-
+/*
   void init() {
+    MockitoAnnotations.initMocks(this);
+    funcionarioDAO = spy(new FuncionarioDAO(transacao));
+    doReturn(transacao).when(funcionarioDAO).buscarTransacao();
   }
+  */
 }
 
 void main() {
